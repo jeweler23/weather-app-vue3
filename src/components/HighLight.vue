@@ -1,4 +1,25 @@
-<script setup></script>
+<script setup>
+import { computed } from 'vue'
+import { getPressure, getTime } from '../utils/index.js'
+
+const props = defineProps({
+  weatherInfo: {
+    type: [Object, null],
+    required: true
+  }
+})
+
+const timeZone = computed(() => props.weatherInfo.timezone)
+console.log(timeZone)
+
+const sunriseTime = computed(() => {
+  return getTime(props.weatherInfo?.sys?.sunrise + timeZone.value)
+})
+
+const sunsetTime = computed(() => {
+  return getTime(props.weatherInfo?.sys?.sunset + timeZone.value)
+})
+</script>
 <template>
   <div class="section highlights">
     <div class="title">Today's Highlights</div>
@@ -10,11 +31,11 @@
           <div class="card-info">
             <div class="card-justify">
               <div class="info-main">
-                <div class="info-main-num">3.6</div>
+                <div class="info-main-num">{{ weatherInfo?.wind?.speed }}</div>
                 <div class="info-main-text">m/s</div>
               </div>
               <div class="info-main">
-                <div class="info-main-num">350</div>
+                <div class="info-main-num">{{ weatherInfo?.wind?.deg }}</div>
                 <div class="info-main-text">deg</div>
               </div>
             </div>
@@ -23,8 +44,12 @@
         <div class="card-small">
           <div class="card-small-title">Wind gusts</div>
           <div class="card-small-info">
-            <div class="card-small-data">
-              <div class="info-main-num">8.4</div>
+            <div v-if="weatherInfo?.wind?.gust" class="card-small-data">
+              <div class="info-main-num">{{ weatherInfo?.wind?.gust }}</div>
+              <div class="info-main-text">m/s</div>
+            </div>
+            <div v-else class="card-small-data">
+              <div class="info-main-num">0</div>
               <div class="info-main-text">m/s</div>
             </div>
             <div class="card-small-hint">
@@ -49,7 +74,7 @@
           <div class="card-info">
             <div class="card-centered">
               <div class="info-main">
-                <div class="info-main-num">765</div>
+                <div class="info-main-num">{{ getPressure(weatherInfo.main.pressure) }}</div>
                 <div class="info-main-text">mm</div>
               </div>
             </div>
@@ -59,7 +84,7 @@
           <div class="card-small-title">Feels like</div>
           <div class="card-small-info">
             <div class="card-small-data">
-              <div class="info-main-num">21</div>
+              <div class="info-main-num">{{ Math.round(weatherInfo.main.feels_like) }}</div>
               <div class="info-main-text">°C</div>
             </div>
             <div class="card-small-hint">
@@ -78,12 +103,12 @@
               <div class="state">
                 <div class="state-pic"></div>
                 <div class="state-title">Sunrise</div>
-                <div class="state-time">07:31:42</div>
+                <div class="state-time">{{ sunriseTime }}</div>
               </div>
               <div class="state">
                 <div class="state-pic state-pic--flipped"></div>
                 <div class="state-title">Sunset</div>
-                <div class="state-time">18:34:19</div>
+                <div class="state-time">{{ sunsetTime }}</div>
               </div>
             </div>
           </div>
@@ -92,7 +117,7 @@
           <div class="card-small-title">Cloudiness</div>
           <div class="card-small-info">
             <div class="card-small-data">
-              <div class="info-main-num">80</div>
+              <div class="info-main-num">{{ weatherInfo?.clouds.all }}</div>
               <div class="info-main-text">%</div>
             </div>
             <div class="card-small-hint">

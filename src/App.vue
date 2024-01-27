@@ -1,13 +1,15 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { API_KEY, API_URL } from './const/index.js'
 import WeatherSummery from './components/WeatherSummery.vue'
 import HighLight from './components/HighLight.vue'
 import Coords from './components/Coords.vue'
 import Humidity from './components/Humidity.vue'
+import { capitalizeFirstLetter } from './utils'
 
 const city = ref('Moscow')
 const weatherInfo = ref(null)
+const isError = computed(() => weatherInfo.value?.cod !== 200)
 
 function getWeather() {
   fetch(`${API_URL}q=${city.value}&units=metric&appid=${API_KEY}`)
@@ -24,21 +26,27 @@ onMounted(getWeather)
       <div class="container">
         <div class="laptop">
           <div class="sections">
-            <section class="section section-left">
+            <section :class="['section', 'section-left', { 'section-error': isError }]">
               <div class="info">
                 <div class="city-inner">
                   <input v-model="city" type="text" class="search" @keyup.enter="getWeather" />
                 </div>
-                <WeatherSummery :weatherInfo="weatherInfo"></WeatherSummery>
+                <WeatherSummery :weatherInfo="weatherInfo" v-if="!isError"></WeatherSummery>
+                <div v-else class="error">
+                  <div class="error-title">Ooops! Something went wrong</div>
+                  <div class="error-message">
+                    {{ capitalizeFirstLetter(weatherInfo?.message) }}
+                  </div>
+                </div>
               </div>
             </section>
-            <section class="section section-right">
-              <HighLight></HighLight>
+            <section class="section section-right" v-if="!isError">
+              <HighLight :weatherInfo="weatherInfo" ></HighLight>
             </section>
           </div>
-          <div class="sections" v-if="weatherInfo?.weather">
+          <div class="sections" v-if="!isError">
             <Coords :coord="weatherInfo.coord"></Coords>
-            <Humidity ></Humidity>
+            <Humidity :humidity="weatherInfo.main.humidity"></Humidity>
           </div>
         </div>
       </div>
@@ -76,6 +84,11 @@ onMounted(getWeather)
 
   @media (max-width: 767px)
     width: 100%
+    padding-right: 0
+
+  &.section-error
+    min-width: 235px
+    width: auto
     padding-right: 0
 
 .section-right
@@ -128,4 +141,14 @@ onMounted(getWeather)
 
   @media (max-width: 767px)
     width: 100%
+
+.error
+  padding-top: 20px
+
+  &-title
+    font-size: 19px
+    font-weight: 700
+  &-message
+    font-size: 4
+    font-weight: 400
 </style>
